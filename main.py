@@ -5,14 +5,14 @@ import utils
 import time
 import wandb
 
-from options import *
+from options import *  # init_args
 
 from train import train
 from losses import LossComputer
 from test import test
 from models import WSAD
 
-from dataset_loader import *
+from dataset_loader import XDVideo, DroneAnomaly
 from tqdm import tqdm
 
 localtime = time.localtime()
@@ -58,29 +58,25 @@ if __name__ == "__main__":
 
     normal_train_loader = data.DataLoader(
         XDVideo(root_dir = args.root_dir, mode = 'Train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = True),
-            batch_size = args.batch_size,
-            shuffle = True, num_workers = args.num_workers,
-            worker_init_fn = worker_init_fn, drop_last = True)
+        batch_size = args.batch_size,
+        shuffle = True, num_workers = args.num_workers,
+        worker_init_fn = worker_init_fn, drop_last = True)
     abnormal_train_loader = data.DataLoader(
         XDVideo(root_dir = args.root_dir, mode='Train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = False),
-            batch_size = args.batch_size,
-            shuffle = True, num_workers = args.num_workers,
-            worker_init_fn = worker_init_fn, drop_last = True)
+        batch_size = args.batch_size,
+        shuffle = True, num_workers = args.num_workers,
+        worker_init_fn = worker_init_fn, drop_last = True)
     test_loader = data.DataLoader(
         XDVideo(root_dir = args.root_dir, mode = 'Test', num_segments = args.num_segments, len_feature = args.len_feature),
-            batch_size = 5,
-            shuffle = False, num_workers = args.num_workers,
-            worker_init_fn = worker_init_fn)
+        batch_size = 5,
+        shuffle = False, num_workers = args.num_workers,
+        worker_init_fn = worker_init_fn)
 
     test_info = {'step': [], 'AUC': [], 'AP': []}
-    
     best_auc = 0
-
     criterion = LossComputer()
-    
     optimizer = torch.optim.Adam(net.parameters(), lr = args.lr[0],
         betas = (0.9, 0.999), weight_decay = args.weight_decay)
-
     best_scores = {
         'best_AUC': -1,
         'best_AP': -1,
@@ -100,7 +96,8 @@ if __name__ == "__main__":
 
         if (step - 1) % len(abnormal_train_loader) == 0:
             abnormal_loader_iter = iter(abnormal_train_loader)
-        losses = train(net, normal_loader_iter,abnormal_loader_iter, optimizer, criterion)
+        
+        losses = train(net, normal_loader_iter, abnormal_loader_iter, optimizer, criterion)
         wandb.log(losses, step=step)
         if step % args.plot_freq == 0 and step > 0:
             metric = test(net, test_loader, test_info, step)

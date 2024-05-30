@@ -21,6 +21,7 @@ particular, the proposed DFM criterion is also discriminative for anomaly recogn
 
 ## Train
     python main.py --version train --root_dir data_root
+    python main.py --version train --root_dir /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly
 
 ## Inference
     python infer.py --model_path ./ckpts/xd_best_2022.pkl --root_dir data_root
