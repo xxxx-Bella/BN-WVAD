@@ -31,7 +31,7 @@ class WSAD(Module):
         self.kernel_sizes = args.kernel_sizes
 
         self.normal_head = NormalHead(in_channel=512, ratios=args.ratios, kernel_sizes=args.kernel_sizes)
-        self.embedding = Temporal(input_size,512)
+        self.embedding = Temporal(input_size, 512)  # 将 input_size 转换成 512 个通道
         self.selfatt = Transformer(512, 2, 4, 128, 512, dropout = 0)
         self.step = 0
     
@@ -62,11 +62,11 @@ class WSAD(Module):
         bs, c, t = feats.shape
         select_num_sample = int(t * sample_select_ratio)
         select_num_batch = int(bs // 2 * t * batch_select_ratio)
-        feats = feats.view(bs, ncrops, c, t).mean(1) # b x c x t
-        nor_distance = distance[:bs // 2] # b x t
-        nor_feats = feats[:bs // 2].permute(0, 2, 1) # b x t x c
-        abn_distance = distance[bs // 2:] # b x t
-        abn_feats = feats[bs // 2:].permute(0, 2, 1) # b x t x c
+        feats = feats.view(bs, ncrops, c, t).mean(1)  # b x c x t
+        nor_distance = distance[:bs // 2]  # b x t
+        nor_feats = feats[:bs // 2].permute(0, 2, 1)  # b x t x c
+        abn_distance = distance[bs // 2:]  # b x t
+        abn_feats = feats[bs // 2:].permute(0, 2, 1)  # b x t x c
         abn_distance_flatten = abn_distance.reshape(-1)
         abn_feats_flatten = abn_feats.reshape(-1, c)
         
@@ -98,6 +98,8 @@ class WSAD(Module):
         else:
             b, t, d = x.size()
             n = 1
+        
+        # print("Before embedding:", x.size())
         x = self.embedding(x)
         x = self.selfatt(x)
         
@@ -108,7 +110,7 @@ class WSAD(Module):
 
         distances = [self.get_mahalanobis_distance(normal_feat, anchor, var, ncrops=n) for normal_feat, anchor, var in zip(normal_feats, anchors, variances)]
 
-        if self.flag == "Train":
+        if self.flag == "train":
             
             select_normals = []
             select_abnormals = []
@@ -128,7 +130,7 @@ class WSAD(Module):
                     'pre_normal_scores': normal_scores[0:b // 2],
                     'bn_results': bn_resutls,
                 }
-        else:
+        else:  # test
 
             distance_sum = sum(distances)
 

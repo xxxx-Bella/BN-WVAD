@@ -4,16 +4,17 @@ import os
 def parse_args():
     descript = 'Pytorch Implementation of UR-DMU'
     parser = argparse.ArgumentParser(description = descript)
-    parser.add_argument('--len_feature', type = int, default = 1024)
+    parser.add_argument('--len_feature', type = int, default = 2048)  # origin 1024
 
-    parser.add_argument('--root_dir', type = str, default = 'xd/')
+    parser.add_argument('--dataset', type = str, default = 'DroneAnomaly', help = 'DroneAnomaly,XDViolence')
+    parser.add_argument('--data_path', type = str)
     parser.add_argument('--log_path', type = str, default = 'logs/')
     
     parser.add_argument('--model_path', type = str, default = 'ckpts/')
     parser.add_argument('--lr', type = str, default = '[0.0001]*1000', help = 'learning rates for steps(list form)')
-    parser.add_argument('--batch_size', type = int, default = 64)
+    parser.add_argument('--batch_size', type = int, default = 4)
     
-    parser.add_argument('--num_workers', type = int, default = 4)
+    parser.add_argument('--num_workers', type = int, default = 0)  # origin 4
     parser.add_argument('--num_segments', type = int, default = 200)
     parser.add_argument('--seed', type = int, default = 2022, help = 'random seed (-1 for no manual seed)')
     

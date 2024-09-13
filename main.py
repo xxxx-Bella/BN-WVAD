@@ -1,5 +1,6 @@
 import pdb
 import numpy as np
+import torch
 import torch.utils.data as data
 import utils
 import time
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         config={
             'optimization:lr': args.lr[0],
             'optimization:iters': args.num_iters,
-            'dataset:dataset': 'xd-violence',
+            'dataset:dataset': args.dataset,
             'model:kernel_sizes': args.kernel_sizes,
             'model:channel_ratios': args.ratios,
             'triplet_loss:abn_ratio_sample': args.ratio_sample,
@@ -53,24 +54,45 @@ if __name__ == "__main__":
         utils.set_seed(args.seed)
         worker_init_fn = np.random.seed(args.seed)
     
-    net = WSAD(args.len_feature,flag = "Train", args=args)
+    net = WSAD(args.len_feature, flag = "train", args=args)
     net = net.cuda()
+    if args.dataset == 'XDViolence':
+        normal_train_loader = data.DataLoader(
+            XDVideo(data_path = args.data_path, mode = 'train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = True),
+            batch_size = args.batch_size,
+            shuffle = True, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn, drop_last = True)
+        abnormal_train_loader = data.DataLoader(
+            XDVideo(data_path = args.data_path, mode='train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = False),
+            batch_size = args.batch_size,
+            shuffle = True, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn, drop_last = True)
+        test_loader = data.DataLoader(
+            XDVideo(data_path = args.data_path, mode = 'test', num_segments = args.num_segments, len_feature = args.len_feature),
+            batch_size = 5,
+            shuffle = False, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn)
+    elif args.dataset == 'DroneAnomaly':
+        normal_train_loader = data.DataLoader(
+            DroneAnomaly(data_path = args.data_path, mode = 'train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = True),
+            batch_size = args.batch_size,
+            shuffle = True, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn, drop_last = True)
+        abnormal_train_loader = data.DataLoader(
+            DroneAnomaly(data_path = args.data_path, mode='train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = False),
+            batch_size = args.batch_size,
+            shuffle = True, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn, drop_last = True)
+        test_loader = data.DataLoader(
+            DroneAnomaly(data_path = args.data_path, mode = 'test', num_segments = args.num_segments, len_feature = args.len_feature),
+            batch_size = 1,
+            shuffle = False, num_workers = args.num_workers,
+            worker_init_fn = worker_init_fn)
 
-    normal_train_loader = data.DataLoader(
-        XDVideo(root_dir = args.root_dir, mode = 'Train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = True),
-        batch_size = args.batch_size,
-        shuffle = True, num_workers = args.num_workers,
-        worker_init_fn = worker_init_fn, drop_last = True)
-    abnormal_train_loader = data.DataLoader(
-        XDVideo(root_dir = args.root_dir, mode='Train', num_segments = args.num_segments, len_feature = args.len_feature, is_normal = False),
-        batch_size = args.batch_size,
-        shuffle = True, num_workers = args.num_workers,
-        worker_init_fn = worker_init_fn, drop_last = True)
-    test_loader = data.DataLoader(
-        XDVideo(root_dir = args.root_dir, mode = 'Test', num_segments = args.num_segments, len_feature = args.len_feature),
-        batch_size = 5,
-        shuffle = False, num_workers = args.num_workers,
-        worker_init_fn = worker_init_fn)
+    print(f'train_Nloader: {len(normal_train_loader)}')
+    print(f'train_Aloader: {len(abnormal_train_loader)}')
+    print(f'test_loader: {len(test_loader)}')
+    # breakpoint()
 
     test_info = {'step': [], 'AUC': [], 'AP': []}
     best_auc = 0
@@ -81,7 +103,7 @@ if __name__ == "__main__":
         'best_AUC': -1,
         'best_AP': -1,
     }
-
+    
     metric = test(net, test_loader, test_info, 0)
     for step in tqdm(
             range(1, args.num_iters + 1),
@@ -92,14 +114,18 @@ if __name__ == "__main__":
             for param_group in optimizer.param_groups:
                 param_group["lr"] = args.lr[step - 1]
         if (step - 1) % len(normal_train_loader) == 0:
+            print('-----------------\nGeting normal_loader_iter...\n')
             normal_loader_iter = iter(normal_train_loader)
 
         if (step - 1) % len(abnormal_train_loader) == 0:
+            print('-----------------\nGeting abnormal_loader_iter...\n')
             abnormal_loader_iter = iter(abnormal_train_loader)
         
+        print('-----------------\nStart training...\n')
         losses = train(net, normal_loader_iter, abnormal_loader_iter, optimizer, criterion)
         wandb.log(losses, step=step)
         if step % args.plot_freq == 0 and step > 0:
+            print('-----------------\nStart testing...\n')
             metric = test(net, test_loader, test_info, step)
 
             if test_info["AP"][-1] > best_scores['best_AP']:

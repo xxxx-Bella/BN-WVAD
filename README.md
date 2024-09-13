@@ -13,6 +13,14 @@ particular, the proposed DFM criterion is also discriminative for anomaly recogn
 - Torchvision 0.15.2
 - cudatoolkit 11.7
 
+
+```bash
+cd /home/featurize/work/yuxin/WVAD/BN-WVAD && conda create -n "bn" python=3.8.16 && conda activate bn && pip install torch matplotlib scikit-learn tqdm wandb einops
+python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly
+
+93d9cb47ca8e71ecdf675438033ea06ebc9cfd9c
+```
+
 ## Dataset
 **We use the extracted I3D features for UCF-Crime and XD-Violence datasets from the following works:**
 > [**UCF-Crime 10-crop I3D features**](https://github.com/Roc-Ng/DeepMIL)
@@ -20,11 +28,10 @@ particular, the proposed DFM criterion is also discriminative for anomaly recogn
 > [**XD-Violence 5-crop I3D features**](https://roc-ng.github.io/XD-Violence/)
 
 ## Train
-    python main.py --version train --root_dir data_root
-    python main.py --version train --root_dir /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly
+    python main.py --version train --data_path data_root
 
 ## Inference
-    python infer.py --model_path ./ckpts/xd_best_2022.pkl --root_dir data_root
+    python infer.py --model_path ./ckpts/xd_best_2022.pkl --data_path data_root
 
 ## Result on XD-Violence
 | Method |    AUC    |   AUC_sub   |     AP    |   AP_sub   |
