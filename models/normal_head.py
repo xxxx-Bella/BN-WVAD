@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 
 class NormalHead(nn.Module):
+    '''
+    三层的一维卷积网络，用于提取时间序列数据的特征，并输出不同通道的特征图
+    '''
     def __init__(self, in_channel=512, ratios=[16, 32], kernel_sizes=[1, 1, 1]):
         super(NormalHead, self).__init__()
         self.ratios = ratios

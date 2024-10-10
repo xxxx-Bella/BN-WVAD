@@ -1,5 +1,8 @@
-wandb
+wandb/
 .vscode
 template.sh
 
 *.pyc
+
+ckpts/
+logs/

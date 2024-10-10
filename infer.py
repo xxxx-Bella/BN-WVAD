@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from dataset_loader import XDVideo
+from dataset_loader import XDVideo, DroneAnomaly
 from options import parse_args
 import pdb
 import utils
@@ -57,7 +57,7 @@ def get_metrics(frame_predict, frame_gt):
 
     return metrics
 
-def test(net, test_loader, test_info, step, model_file = None):
+def test(net, test_loader, test_info, epoch, model_file = None):
     with torch.no_grad():
         net.eval()
         net.flag = "Test"
@@ -70,7 +70,7 @@ def test(net, test_loader, test_info, step, model_file = None):
 
         metrics = get_metrics(frame_predict, frame_gt)
         
-        test_info['step'].append(step)
+        test_info['epoch'].append(epoch)
         for score_name, score in metrics.items():
             metrics[score_name] = score * 100
             test_info[score_name].append(metrics[score_name])
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             shuffle = False, num_workers = args.num_workers,
             worker_init_fn = worker_init_fn)
     
-    test_info = {'step': [], 'AUC': [], 'AUC_sub': [], 'AP': [], 'AP_sub': []}
+    test_info = {'epoch': [], 'AUC': [], 'AUC_sub': [], 'AP': [], 'AP_sub': []}
 
     res = test(net, test_loader, test_info, 1, model_file = args.model_path)
 

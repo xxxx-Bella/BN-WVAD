@@ -5,6 +5,8 @@ from .normal_head import NormalHead
 from .translayer import Transformer
 
 class Temporal(Module):
+    '''进行一维卷积，用于时间序列处理，将 input_size 转换为 out_size 的特征图
+    '''
     def __init__(self, input_size, out_size):
         super(Temporal, self).__init__()
         self.conv_1 = nn.Sequential(
@@ -31,8 +33,8 @@ class WSAD(Module):
         self.kernel_sizes = args.kernel_sizes
 
         self.normal_head = NormalHead(in_channel=512, ratios=args.ratios, kernel_sizes=args.kernel_sizes)
-        self.embedding = Temporal(input_size, 512)  # 将 input_size 转换成 512 个通道
-        self.selfatt = Transformer(512, 2, 4, 128, 512, dropout = 0)
+        self.embedding = Temporal(input_size, 512)   # 将 input_size 转换成 512 个通道
+        self.selfatt = Transformer(512, 2, 4, 128, 512, dropout = 0)  # a Transformer-based enhancer
         self.step = 0
     
     def get_normal_scores(self, x, ncrops=None):
@@ -48,8 +50,9 @@ class WSAD(Module):
         
         return xhs, normal_scores
     
+    # DFM (eq.2)
     def get_mahalanobis_distance(self, feats, anchor, var, ncrops = None):
-        distance = torch.sqrt(torch.sum((feats - anchor[None, :, None]) ** 2 / var[None, :, None], dim=1))
+        distance = torch.sqrt( torch.sum((feats - anchor[None, :, None]) ** 2 / var[None, :, None], dim=1) )
         if ncrops:
             bs = distance.shape[0] // ncrops
             # b x t
@@ -57,12 +60,15 @@ class WSAD(Module):
         return distance
     
     def pos_neg_select(self, feats, distance, ncrops):
-        batch_select_ratio = self.ratio_batch
-        sample_select_ratio = self.ratio_sample
-        bs, c, t = feats.shape
-        select_num_sample = int(t * sample_select_ratio)
-        select_num_batch = int(bs // 2 * t * batch_select_ratio)
+        batch_select_ratio = self.ratio_batch   # 0.4
+        sample_select_ratio = self.ratio_sample  # 0.2
+        num, c, t = feats.shape  # torch.Size([80, 32, 32])
+        bs = num // ncrops
+        # breakpoint()
         feats = feats.view(bs, ncrops, c, t).mean(1)  # b x c x t
+        
+        select_num_sample = int(t * sample_select_ratio)  # 6
+        select_num_batch = int(bs // 2 * t * batch_select_ratio)  # 512
         nor_distance = distance[:bs // 2]  # b x t
         nor_feats = feats[:bs // 2].permute(0, 2, 1)  # b x t x c
         abn_distance = distance[bs // 2:]  # b x t
@@ -100,15 +106,16 @@ class WSAD(Module):
             n = 1
         
         # print("Before embedding:", x.size())
-        x = self.embedding(x)
-        x = self.selfatt(x)
+        x = self.embedding(x)  # 对输入特征进行进一步的时间维度上的编码，从而提取出时序相关的高级特征
+        x = self.selfatt(x)  # 在时间维度上进行全局的信息交互，进而提升模型对时间动态变化的理解能力, enhanced feature
         
         normal_feats, normal_scores = self.get_normal_scores(x, n)
         
-        anchors = [bn.running_mean for bn in self.normal_head.bns]
-        variances = [bn.running_var for bn in self.normal_head.bns]
+        anchors = [bn.running_mean for bn in self.normal_head.bns]  # Mean Vector of BatchNorm
+        variances = [bn.running_var for bn in self.normal_head.bns]  # Variances of each dimension 
 
-        distances = [self.get_mahalanobis_distance(normal_feat, anchor, var, ncrops=n) for normal_feat, anchor, var in zip(normal_feats, anchors, variances)]
+        distances = [self.get_mahalanobis_distance(normal_feat, anchor, var, ncrops=n) \
+                        for normal_feat, anchor, var in zip(normal_feats, anchors, variances)]
 
         if self.flag == "train":
             
