@@ -16,11 +16,6 @@ particular, the proposed DFM criterion is also discriminative for anomaly recogn
 
 ```bash
 cd /home/featurize/work/yuxin/WVAD/BN-WVAD && conda create -n "bn" python=3.8.16 && conda activate bn && pip install torch matplotlib scikit-learn tqdm wandb einops
-
-python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly --num_segments 200 --lr '[0.0001]*3000' --seed 1
-python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/scmu_campus_drone --num_segments 32 --lr '[0.0001]*3000' --seed 1
-
-
 ```
 
 ## Dataset
@@ -32,8 +27,13 @@ python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/o
 ## Train
     python main.py --version train --data_path data_root
 
+    python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly --num_segments 200 --lr '[0.0001]*3000' --seed 1
+    python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/scmu_campus_drone --num_segments 32 --lr '[0.0001]*3000' --seed 1
+
 ## Inference
     python infer.py --model_path ./ckpts/xd_best_2022.pkl --data_path data_root
+
+    python infer.py --model_path ./ckpts/xd_best_2022.pkl --data_path /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly
 
 ## Result on XD-Violence
 | Method |    AUC    |   AUC_sub   |     AP    |   AP_sub   |
