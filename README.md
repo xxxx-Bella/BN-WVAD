@@ -21,11 +21,6 @@ python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/o
 python main.py --version train --data_path /home/featurize/work/yuxin/WVAD/I3D/output/scmu_campus_drone --num_segments 32 --lr '[0.0001]*3000' --seed 1
 
 
-93d9cb47ca8e71ecdf675438033ea06ebc9cfd9c
-
-python infer.py --model_path ./ckpts/xd_best_2022.pkl --data_path /home/featurize/work/yuxin/WVAD/I3D/output/drone_anomaly
-
-git config --global user.email "hyx18390659623@163.com" && git config --global user.name "xxxx-Bella"
 ```
 
 ## Dataset
