@@ -4,6 +4,7 @@ import numpy as np
 from dataset_loader import *
 from sklearn.metrics import roc_curve,auc,precision_recall_curve
 import warnings
+from utils import visualization
 warnings.filterwarnings("ignore")
 
 def get_predicts(test_loader, net):

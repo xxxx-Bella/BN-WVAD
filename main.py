@@ -18,11 +18,12 @@ localtime = time.localtime()
 time_ymd = time.strftime("%Y-%m-%d", localtime)
 time_hms = time.strftime("%H:%M:%S", localtime)
 
+
 if __name__ == "__main__":
     args = parse_args()
     if args.debug:
         pdb.set_trace()
-    
+
     wandb.init(
         project="BN-WVAD",
         name=args.version,
@@ -99,10 +100,10 @@ if __name__ == "__main__":
         os.makedirs(args.model_path)
     
     test_info = {'epoch': [], 'AUC': [], 'AP': []}
-    best_auc = 0
+    best_auc = 0 
     criterion = LossComputer()
     optimizer = torch.optim.Adam(net.parameters(), lr = args.lr[0],
-        betas = (0.9, 0.999), weight_decay = args.weight_decay)
+        betas = (0.9, 0.999), weight_decay = args.weight_decay) 
     best_scores = {
         'best_AUC': -1,
         'best_AP': -1,
@@ -143,5 +144,5 @@ if __name__ == "__main__":
                 best_name = 'best_' + n
                 best_scores[best_name] = v if v > best_scores[best_name] else best_scores[best_name]
 
-        wandb.log(metric, step=epoch)
-        wandb.log(best_scores, step=epoch)
+        wandb.log(metric, step=epoch) 
+        wandb.log(best_scores, step=epoch) 

@@ -16,8 +16,8 @@ def train(net, normal_loader, abnormal_loader, optimizer, criterion):
     _label = torch.cat((nlabel, alabel), 0)
     _data = _data.cuda()
     _label = _label.cuda()
-    res = net(_data)  # WSAD
-    cost, loss = criterion(res)
+    res = net(_data)  # WSAD 
+    cost, loss = criterion(res) 
     optimizer.zero_grad()
     cost.backward()
     torch.nn.utils.clip_grad_norm_(net.parameters(), 1.)

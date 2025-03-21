@@ -9,6 +9,7 @@ def parse_args():
     parser.add_argument('--dataset', type = str, default = 'DroneAnomaly', help = 'DroneAnomaly,XDViolence')
     parser.add_argument('--data_path', type = str)
     parser.add_argument('--log_path', type = str, default = 'logs/')
+
     
     parser.add_argument('--model_path', type = str, default = 'ckpts/')
     parser.add_argument('--lr', type = str, default = '[0.0001]*1000', help = 'learning rates for steps(list form)')
